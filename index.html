@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet"/>
     <script src="./jquery-1.12.2.min.js?v=2023.2.5582"></script>
     <script src="./daypilot-all.min.js?v=2023.2.5582"></script>
-    
 
     <!-- /head -->
 </head>
@@ -19,8 +18,8 @@
 <!-- top -->
 <template id="content" data-version="2023.2.5582">
 
-    <!-- /top -->
-
+    <label>Date: </label>    <!-- /top -->
+    <input id="request_date" type="date" value="">
     <div id="dp"></div>
 
     <script type="text/javascript">
@@ -49,19 +48,66 @@
             setDate = todayDate;
         }
 
+        $('#request_date').val(setDate);
+
+        $('#request_date').change(function (){
+            if($('#request_date').val() !== ""){
+                dp.startDate = new DayPilot.Date($('#request_date').val());
+                dp.update();
+                $('.scheduler_default_corner').html("<img style='margin-top: 15%;' src='./spritle-logo.png'>");
+            }
+        });
+
         setInterval(function () {
             if ($('#dp').html() === "You are using a trial version of DayPilot Pro.") {
                 window.location = window.location.pathname+"?request_date="+setDate
             }
         }, 1000);
 
-
-
-        var dp = new DayPilot.Scheduler("dp");
-
+        var dp = new DayPilot.Scheduler("dp", {
+            treeEnabled: true,
+            treePreventParentUsage: true,
+            heightSpec: "Max",
+            height: 500,
+            eventMovingStartEndEnabled: true,
+            eventResizingStartEndEnabled: true,
+            timeRangeSelectingStartEndEnabled: true,
+            contextMenu: new DayPilot.Menu({
+                items: [
+                    {
+                        text: "Edit",
+                        onClick: (args) => {
+                            dp.events.edit(args.source);
+                        }
+                    }
+                ]
+            }),
+            onEventMoved: (args) => {
+                dp.message("Moved: " + args.e.text());
+            },
+            onEventClick: (args) => {
+                DayPilot.Modal.alert("<b>Event Name : </b>"+args.e.data.text);
+            },
+            onTimeRangeSelected: async (args) => {
+                const modal = await DayPilot.Modal.prompt("<b>New Event name:</b>", "")
+                dp.clearSelection();
+                if (modal.canceled) {
+                    return;
+                }
+                const name = modal.result;
+                dp.events.add({
+                    start: args.start,
+                    end: args.end,
+                    id: DayPilot.guid(),
+                    resource: args.resource,
+                    text: name
+                });
+                dp.message("Created");
+            }
+        });
         // view
         dp.startDate = new DayPilot.Date(setDate);  // or just dp.startDate = "2013-03-25";
-        dp.days = 30;
+        dp.days = 1;
 
         dp.timeHeaders = [
             {groupBy: "Day"},
@@ -105,20 +151,20 @@
 
 
         // event creating
-        dp.onTimeRangeSelected = function (args) {
-            var name = prompt("New event name:", "Event");
-            dp.clearSelection();
-            if (!name) return;
-            var e = new DayPilot.Event({
-                start: args.start,
-                end: args.end,
-                id: DayPilot.guid(),
-                resource: args.resource,
-                text: name
-            });
-            dp.events.add(e);
-            dp.message("Created");
-        };
+        // dp.onTimeRangeSelected = function (args) {
+        //     var name = prompt("New event name:", "Event");
+        //     dp.clearSelection();
+        //     if (!name) return;
+        //     var e = new DayPilot.Event({
+        //         start: args.start,
+        //         end: args.end,
+        //         id: DayPilot.guid(),
+        //         resource: args.resource,
+        //         text: name
+        //     });
+        //     dp.events.add(e);
+        //     dp.message("Created");
+        // };
 
         dp.snapToGrid = false;
         dp.useEventBoxes = "Never";
@@ -140,8 +186,9 @@
 
         dp.scrollTo(setDate+"T00:00:00");
         $('.dpw-sidebar').hide();
+        $('.button-source').hide();
         $('.dpw-subheader').hide();
-        $('.scheduler_default_corner').html("");
+        $('.scheduler_default_corner').html("<img style='margin-top: 15%;' src='./spritle-logo.png'>");
     </script>
 
     <!-- bottom -->
