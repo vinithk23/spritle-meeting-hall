@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Time Scale: Hours (JavaScript Scheduler)</title>
+
+    <!-- head -->
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="./main.css?v=2023.2.5582" type="text/css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet"/>
+    <script src="./jquery-1.12.2.min.js?v=2023.2.5582"></script>
+    <script src="./daypilot-all.min.js?v=2023.2.5582"></script>
+    
+
+    <!-- /head -->
+</head>
+<body>
+
+<!-- top -->
+<template id="content" data-version="2023.2.5582">
+
+    <!-- /top -->
+
+    <div id="dp"></div>
+
+    <script type="text/javascript">
+        var getUrlParameter = function getUrlParameter(sParam) {
+            var sPageURL = window.location.search.substring(1),
+                sURLVariables = sPageURL.split('&'),
+                sParameterName,
+                i;
+
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
+
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                }
+            }
+            return false;
+        };
+
+        var request_date = getUrlParameter('request_date');
+        var setDate;
+        var todayDate = new Date().toISOString().split('T')[0];
+        if(request_date){
+            setDate = request_date;
+        } else {
+            setDate = todayDate;
+        }
+
+        setInterval(function () {
+            if ($('#dp').html() === "You are using a trial version of DayPilot Pro.") {
+                window.location = window.location.pathname+"?request_date="+setDate
+            }
+        }, 1000);
+
+
+
+        var dp = new DayPilot.Scheduler("dp");
+
+        // view
+        dp.startDate = new DayPilot.Date(setDate);  // or just dp.startDate = "2013-03-25";
+        dp.days = 30;
+
+        dp.timeHeaders = [
+            {groupBy: "Day"},
+            {groupBy: "Cell"}
+        ];
+        dp.scale = "Hour";
+        dp.eventDeleteHandling = "Update";
+        dp.treeEnabled = true;
+        dp.resources = [
+            // {
+            //     name: "Room A", id: "A", expanded: true, children: [
+            //         {name: "Room A.1", id: "A.1"},
+            //         {name: "Room A.2", id: "A.2"}
+            //     ]
+            // },
+            {name: "Room A", id: "A"},
+            {name: "Room B", id: "B"},
+            {name: "Room C", id: "C"},
+            {name: "Room D", id: "D"},
+            {name: "Room E", id: "E"},
+            {name: "Room F", id: "F"},
+            {name: "Room G", id: "G"},
+            {name: "Room H", id: "H"}
+        ];
+
+        // generate and load events
+        for (var i = 0; i < 6; i++) {
+            var duration = Math.floor(Math.random() * 6) + 1; // 1 to 6
+            var start = Math.floor(Math.random() * 6) - 3; // -3 to 3
+
+            var e = new DayPilot.Event({
+                start: new DayPilot.Date(setDate+"T00:00:00").addHours(start),
+                end: new DayPilot.Date(setDate+"T00:00:00").addHours(start).addHours(duration),
+                id: DayPilot.guid(),
+                resource: "B",
+                text: "Event"+i,
+                bubbleHtml: "Testing bubble"+i
+            });
+            dp.events.add(e);
+        }
+
+
+        // event creating
+        dp.onTimeRangeSelected = function (args) {
+            var name = prompt("New event name:", "Event");
+            dp.clearSelection();
+            if (!name) return;
+            var e = new DayPilot.Event({
+                start: args.start,
+                end: args.end,
+                id: DayPilot.guid(),
+                resource: args.resource,
+                text: name
+            });
+            dp.events.add(e);
+            dp.message("Created");
+        };
+
+        dp.snapToGrid = false;
+        dp.useEventBoxes = "Never";
+
+        dp.onEventMoving = function (args) {
+            var offset = args.start.getMinutes() % 5;
+            if (offset) {
+                args.start = args.start.addMinutes(-offset);
+                args.end = args.end.addMinutes(-offset);
+            }
+
+            args.left.enabled = true;
+            args.left.html = args.start.toString("h:mm tt");
+        };
+
+        dp.cellWidth = 60;
+
+        dp.init();
+
+        dp.scrollTo(setDate+"T00:00:00");
+        $('.dpw-sidebar').hide();
+        $('.dpw-subheader').hide();
+        $('.scheduler_default_corner').html("");
+    </script>
+
+    <!-- bottom -->
+</template>
+
+<script src="./app.js?v=2023.2.5582"></script>
+<!-- /bottom -->
+
+</body>
+</html>
+
