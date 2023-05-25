@@ -18,8 +18,8 @@
 <!-- top -->
 <template id="content" data-version="2023.2.5582">
 
-    <label>Date: </label>    <!-- /top -->
-    <input id="request_date" type="date" value="">
+    <label for="request_date">Date: </label>    <!-- /top -->
+    <input id="request_date" type="date" class="form-control-date">
     <div id="dp"></div>
 
     <script type="text/javascript">
@@ -51,8 +51,9 @@
         $('#request_date').val(setDate);
 
         $('#request_date').change(function (){
-            if($('#request_date').val() !== ""){
-                dp.startDate = new DayPilot.Date($('#request_date').val());
+            var changed_date = $("#request_date").val();
+            if(changed_date){
+                dp.startDate = new DayPilot.Date(changed_date);
                 dp.update();
                 $('.scheduler_default_corner').html("<img style='margin-top: 15%;' src='./spritle-logo.png'>");
             }
@@ -133,18 +134,22 @@
             {name: "Room H", id: "H"}
         ];
 
+        var eventsList = [
+            {start: "10:00:00", end: "13:30:00", resource: "A", text: "CII - CR Meeting", bubbleHtml: "CII"},
+            {start: "11:00:00", end: "13:45:00", resource: "B", text: "SRM - Client Meeting", bubbleHtml: "SRM"},
+            {start: "11:00:00", end: "14:59:00", resource: "C", text: "GTSA - Client Meeting", bubbleHtml: "GTSA"},
+            {start: "10:00:00", end: "13:00:00", resource: "D", text: "Rails Team Meeting", bubbleHtml: "Rails Team"},
+            {start: "14:00:00", end: "16:30:00", resource: "F", text: "Book-Knowledge Sharing Session", bubbleHtml: "Knowledge Sharing Session"}
+        ]
         // generate and load events
-        for (var i = 0; i < 6; i++) {
-            var duration = Math.floor(Math.random() * 6) + 1; // 1 to 6
-            var start = Math.floor(Math.random() * 6) - 3; // -3 to 3
-
+        for (var i = 0; i < eventsList.length; i++) {
             var e = new DayPilot.Event({
-                start: new DayPilot.Date(setDate+"T00:00:00").addHours(start),
-                end: new DayPilot.Date(setDate+"T00:00:00").addHours(start).addHours(duration),
+                start: new DayPilot.Date(setDate+"T"+eventsList[i].start),
+                end: new DayPilot.Date(setDate+"T"+eventsList[i].end),
                 id: DayPilot.guid(),
-                resource: "B",
-                text: "Event"+i,
-                bubbleHtml: "Testing bubble"+i
+                resource: eventsList[i].resource,
+                text: eventsList[i].text,
+                bubbleHtml: eventsList[i].bubbleHtml
             });
             dp.events.add(e);
         }
